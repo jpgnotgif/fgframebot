@@ -5,7 +5,12 @@ import (
 	"strings"
 )
 
+type ApiConfig struct {
+	endpoint string
+}
+
 func (bot *Bot) ReadCmd(userName string, userMessage string) {
+	apiConfig := &ApiConfig{endpoint: "http://localhost:8080/usf4"}
 
 	if strings.Contains(userMessage, "!frames") {
 		framesCmd := strings.Split(userMessage, "!frames")
@@ -17,16 +22,21 @@ func (bot *Bot) ReadCmd(userName string, userMessage string) {
 			return
 		}
 
-		character := strings.Trim(data[0])
-		move := strings.Trim(data[1])
+		characterName := strings.ToLower(strings.TrimSpace(data[0]))
+		characterMove := strings.ToLower(strings.TrimSpace(data[1]))
 
-		// TODO: Continue here
+		character := newCharacter(characterName, apiConfig.endpoint, bot)
+
+		bot.Log(character.name)
+
+		frameDatum := character.frames[characterMove]
+		message := character.PrintFormattedDatum(characterMove)
+
+		bot.Message(message)
+
+		fmt.Printf("frameDatum: %v\n", frameDatum)
 
 	} else {
 		bot.Message("Command not supported BibleThump")
 	}
-}
-
-func (bot *Bot) getFrames(character string, move string) {
-
 }

@@ -32,7 +32,7 @@ func NewBot() *Bot {
 		channel: "#fgframebot",
 		nick:    "fgframebot",
 		pass:    "oauth:cahrwuknwcjxxtxbhtirpfky12iivx",
-		logger:  log.New(os.Stdout, "logger: ", log.Lshortfile),
+		logger:  log.New(os.Stdout, "log: ", log.Lshortfile),
 		timeout: 60,
 	}
 }
@@ -41,9 +41,14 @@ func (bot *Bot) GetOrigin() string {
 	return bot.host + ":" + bot.port
 }
 
-func (bot *Bot) Log(msg string, vars ...string) {
+func Now() string {
 	now := time.Now().UTC()
 	timestamp := now.Format(time.RFC3339)
+	return timestamp
+}
+
+func (bot *Bot) Log(msg string, vars ...string) {
+	timestamp := Now()
 	bot.logger.Println(timestamp + " - " + bot.nick + " - " + msg + " " + strings.Join(vars, " "))
 }
 
@@ -66,7 +71,7 @@ func (bot *Bot) JoinChannel() {
 	fmt.Fprintf(bot.conn, "PASS %s\r\n", bot.pass)
 	fmt.Fprintf(bot.conn, "NICK %s\r\n", bot.nick)
 	fmt.Fprintf(bot.conn, "JOIN %s\r\n", bot.channel)
-	fmt.Fprintf(bot.conn, "PRIVMSG "+bot.channel+" :"+"[fgframebot] joined "+bot.channel+" This bot gives frame data for USF4. Type !help for usage"+"\r\n")
+	fmt.Fprintf(bot.conn, "PRIVMSG "+bot.channel+" :"+"["+Now()+"] "+"This bot gives frame data for USF4. Type !help for usage"+"\r\n")
 }
 
 func (bot *Bot) Message(message string) {
