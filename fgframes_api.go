@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -29,12 +28,9 @@ func (bot *Bot) ReadCmd(userName string, userMessage string) {
 
 		bot.Log(character.name)
 
-		frameDatum := character.frames[characterMove]
 		message := character.PrintFormattedDatum(characterMove)
 
 		bot.Message(message)
-
-		fmt.Printf("frameDatum: %v\n", frameDatum)
 
 	} else {
 		bot.Message("Command not supported BibleThump")

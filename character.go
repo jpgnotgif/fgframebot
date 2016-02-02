@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -73,8 +72,6 @@ func SetFrames(character *Character) map[string]FrameDatum {
 
 	// TODO: is there a better way to do this?
 	for k, v := range mapInterface {
-		fmt.Println("key: " + k)
-
 		switch vv := v.(type) {
 		case map[string]interface{}:
 			fd := FrameDatum{}

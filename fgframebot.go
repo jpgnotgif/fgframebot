@@ -2,7 +2,9 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net"
 	"net/textproto"
@@ -24,14 +26,14 @@ type Bot struct {
 }
 
 // TODO: make this use the config file + cmd line args
-func NewBot() *Bot {
+func NewBot(channel *string, nick *string, pass *string) *Bot {
 	return &Bot{
 		conn:    nil,
 		host:    "irc.twitch.tv",
 		port:    "6667",
-		channel: "#fgframebot",
-		nick:    "fgframebot",
-		pass:    "oauth:cahrwuknwcjxxtxbhtirpfky12iivx",
+		channel: *channel,
+		nick:    *nick,
+		pass:    *pass,
 		logger:  log.New(os.Stdout, "log: ", log.Lshortfile),
 		timeout: 60,
 	}
@@ -82,24 +84,19 @@ func (bot *Bot) Message(message string) {
 	fmt.Fprintf(bot.conn, "PRIVMSG "+bot.channel+" :"+message+"\r\n")
 }
 
-// TODO: write ban & timeout bot commands
-func (bot *Bot) ConsoleInput() {
-	reader := bufio.NewReader(os.Stdin)
-	for {
-		text, _ := reader.ReadString('\n')
-		if text == "/quit" {
-			bot.conn.Close()
-			os.Exit(0)
-		}
-		bot.Log("TEXT: " + text)
-		bot.Message(text)
-	}
-}
-
 func main() {
-	bot := NewBot()
-	//origin := bot.GetOrigin()
+	channel := flag.String("channel", "#fgframebot", "Channel bot will join")
+	nick := flag.String("nick", "fgframebot", "Nickname in channel")
 
+	filePass, err := ioutil.ReadFile("bot_pass.txt")
+	if err != nil {
+		fmt.Println("Unable to read bot_pass.txt file")
+		os.Exit(1)
+	}
+	pass := strings.Replace(string(filePass), "\n", "", 0)
+	flag.Parse()
+
+	bot := NewBot(channel, nick, &pass)
 	bot.Log("Initialized fgframebot.go")
 	bot.Connect()
 	bot.JoinChannel()
@@ -108,8 +105,6 @@ func main() {
 
 	reader := bufio.NewReader(bot.conn)
 	tp := textproto.NewReader(reader)
-
-	go bot.ConsoleInput()
 
 	for {
 		line, err := tp.ReadLine()
