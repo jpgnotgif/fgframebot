@@ -30,8 +30,10 @@ func (bot *Bot) ReadCmd(userName string, userMessage string) {
 
 		characterName := strings.ToLower(strings.TrimSpace(data[0]))
 		characterMove := strings.ToLower(strings.TrimSpace(data[1]))
+
 		character := newCharacter(characterName, apiConfig.endpoint, bot)
 		message := character.PrintFormattedDatum(characterMove)
+
 		bot.Message(message)
 
 	} else if strings.Contains(userMessage, "!characters") {
@@ -44,7 +46,10 @@ func (bot *Bot) ReadCmd(userName string, userMessage string) {
 }
 
 func GetCharacters(bot *Bot) string {
-	uri := "http://localhost:8080/usf4/characters"
+	uri := *bot.service.host + "/" + *bot.service.title + "/" + "characters"
+
+	bot.Log("Fetching characters from " + uri)
+
 	resp, err := http.Get(uri)
 
 	if err != nil {

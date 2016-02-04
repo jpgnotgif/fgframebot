@@ -14,6 +14,11 @@ import (
 	"time"
 )
 
+type FrameService struct {
+	host  *string
+	title *string
+}
+
 type Bot struct {
 	conn    net.Conn
 	host    string
@@ -23,10 +28,11 @@ type Bot struct {
 	pass    string
 	logger  *log.Logger
 	timeout int
+	service *FrameService
 }
 
 // TODO: make this use the config file + cmd line args
-func NewBot(channel *string, nick *string, pass *string) *Bot {
+func NewBot(channel *string, nick *string, pass *string, host *string, title *string) *Bot {
 	return &Bot{
 		conn:    nil,
 		host:    "irc.twitch.tv",
@@ -36,6 +42,7 @@ func NewBot(channel *string, nick *string, pass *string) *Bot {
 		pass:    *pass,
 		logger:  log.New(os.Stdout, "log: ", log.Lshortfile),
 		timeout: 60,
+		service: &FrameService{host: host, title: title},
 	}
 }
 
@@ -85,8 +92,12 @@ func (bot *Bot) Message(message string) {
 }
 
 func main() {
-	channel := flag.String("channel", "#fgframebot", "Channel bot will join")
-	nick := flag.String("nick", "fgframebot", "Nickname in channel")
+	var (
+		channel = flag.String("channel", "#fgframebot", "Channel bot will join")
+		nick    = flag.String("nick", "fgframebot", "Nickname in channel")
+		apiUri  = flag.String("api", "http://localhost:8080", "Define service that responds with frame data")
+		title   = flag.String("title", "usf4", "Define title to scope frame data")
+	)
 
 	filePass, err := ioutil.ReadFile("bot_pass.txt")
 	if err != nil {
@@ -96,8 +107,9 @@ func main() {
 	pass := strings.Replace(string(filePass), "\n", "", 0)
 	flag.Parse()
 
-	bot := NewBot(channel, nick, &pass)
+	bot := NewBot(channel, nick, &pass, apiUri, title)
 	bot.Log("Initialized fgframebot.go")
+	bot.Log("Using API endpoint: " + *bot.service.host + "/" + *bot.service.title)
 	bot.Connect()
 	bot.JoinChannel()
 

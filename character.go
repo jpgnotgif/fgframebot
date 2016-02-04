@@ -36,12 +36,12 @@ func newCharacter(name string, endpoint string, bot *Bot) *Character {
 		endpoint: endpoint,
 		logger:   log.New(os.Stdout, "log: ", log.Lshortfile),
 	}
-	character.frames = SetFrames(character)
+	character.frames = SetFrames(character, bot)
 	return character
 }
 
-func SetFrames(character *Character) map[string]FrameDatum {
-	uri := "http://localhost:8080/usf4/" + character.name
+func SetFrames(character *Character, bot *Bot) map[string]FrameDatum {
+	uri := *bot.service.host + "/" + *bot.service.title + "/" + character.name
 
 	character.Log("Fetching frames for " + character.name)
 	resp, err := http.Get(uri)
@@ -102,5 +102,5 @@ func SetFrames(character *Character) map[string]FrameDatum {
 
 func (character *Character) PrintFormattedDatum(name string) string {
 	frameDatum := character.frames[name]
-	return "startup: " + frameDatum.s + ", active: " + frameDatum.a + ", recovery: " + frameDatum.r + ", adv. on hit: " + frameDatum.ha + ", adv. on block: " + frameDatum.ba
+	return "[" + character.name + ":" + name + "] - " + "startup: " + frameDatum.s + ", active: " + frameDatum.a + ", recovery: " + frameDatum.r + ", hit adv: " + frameDatum.ha + ", block adv: " + frameDatum.ba
 }
