@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -39,6 +40,17 @@ func (bot *Bot) ReadCmd(userName string, userMessage string) {
 	} else if strings.Contains(userMessage, "!characters") {
 		characters := GetCharacters(bot)
 		bot.Message("[character list] " + characters)
+
+	} else if strings.Contains(userMessage, "!moves") {
+		movesCmd := strings.Split(userMessage, "!moves")
+
+		bot.Log(strconv.Itoa(len(movesCmd)))
+
+		characterName := strings.ToLower(strings.TrimSpace(movesCmd[1]))
+		character := newCharacter(characterName, apiConfig.endpoint, bot)
+		message := character.PrintFormattedMoveList()
+
+		bot.Message(message)
 
 	} else {
 		bot.Message("Command not supported BibleThump")
