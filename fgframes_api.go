@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -30,13 +31,26 @@ func (bot *Bot) ReadCmd(userName string, userMessage string) {
 
 		characterName := strings.ToLower(strings.TrimSpace(data[0]))
 		characterMove := strings.ToLower(strings.TrimSpace(data[1]))
+
 		character := newCharacter(characterName, apiConfig.endpoint, bot)
 		message := character.PrintFormattedDatum(characterMove)
+
 		bot.Message(message)
 
 	} else if strings.Contains(userMessage, "!characters") {
 		characters := GetCharacters(bot)
 		bot.Message("[character list] " + characters)
+
+	} else if strings.Contains(userMessage, "!moves") {
+		movesCmd := strings.Split(userMessage, "!moves")
+
+		bot.Log(strconv.Itoa(len(movesCmd)))
+
+		characterName := strings.ToLower(strings.TrimSpace(movesCmd[1]))
+		character := newCharacter(characterName, apiConfig.endpoint, bot)
+		message := character.PrintFormattedMoveList()
+
+		bot.Message(message)
 
 	} else {
 		bot.Message("Command not supported BibleThump")
@@ -44,7 +58,10 @@ func (bot *Bot) ReadCmd(userName string, userMessage string) {
 }
 
 func GetCharacters(bot *Bot) string {
-	uri := "http://localhost:8080/usf4/characters"
+	uri := *bot.service.host + "/" + *bot.service.title + "/" + "characters"
+
+	bot.Log("Fetching characters from " + uri)
+
 	resp, err := http.Get(uri)
 
 	if err != nil {

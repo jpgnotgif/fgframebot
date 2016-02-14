@@ -11,10 +11,11 @@ import (
 )
 
 type Character struct {
-	name     string
-	endpoint string
-	frames   map[string]FrameDatum
-	logger   *log.Logger
+	name        string
+	endpoint    string
+	frames      map[string]FrameDatum
+	movelistUrl string
+	logger      *log.Logger
 }
 
 type FrameDatum struct {
@@ -36,19 +37,19 @@ func newCharacter(name string, endpoint string, bot *Bot) *Character {
 		endpoint: endpoint,
 		logger:   log.New(os.Stdout, "log: ", log.Lshortfile),
 	}
-	character.frames = SetFrames(character)
+	SetData(character, bot)
 	return character
 }
 
-func SetFrames(character *Character) map[string]FrameDatum {
-	uri := "http://localhost:8080/usf4/" + character.name
+func SetData(character *Character, bot *Bot) {
+	uri := *bot.service.host + "/" + *bot.service.title + "/" + character.name
 
-	character.Log("Fetching frames for " + character.name)
+	character.Log("Fetching data for " + character.name)
 	resp, err := http.Get(uri)
 
 	if err != nil {
 		// handle error here
-		character.Log("Failed to get frame data for " + character.name)
+		character.Log("Failed to get data for " + character.name)
 	}
 
 	defer resp.Body.Close()
@@ -92,15 +93,20 @@ func SetFrames(character *Character) map[string]FrameDatum {
 				}
 			}
 			frameDatums[k] = fd
+		case string:
+			character.movelistUrl = vv
 		default:
 			character.Log("Unable to read JSON data")
 		}
 	}
-
-	return frameDatums
+	character.frames = frameDatums
 }
 
 func (character *Character) PrintFormattedDatum(name string) string {
 	frameDatum := character.frames[name]
-	return "startup: " + frameDatum.s + ", active: " + frameDatum.a + ", recovery: " + frameDatum.r + ", adv. on hit: " + frameDatum.ha + ", adv. on block: " + frameDatum.ba
+	return "[" + character.name + ":" + name + "] - " + "startup: " + frameDatum.s + ", active: " + frameDatum.a + ", recovery: " + frameDatum.r + ", hit adv: " + frameDatum.ha + ", block adv: " + frameDatum.ba
+}
+
+func (character *Character) PrintFormattedMoveList() string {
+	return "[" + character.name + "] - " + character.movelistUrl
 }
