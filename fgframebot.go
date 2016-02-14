@@ -93,20 +93,20 @@ func (bot *Bot) Message(message string) {
 
 func main() {
 	var (
-		channel = flag.String("channel", "#fgframebot", "Channel bot will join")
-		nick    = flag.String("nick", "fgframebot", "Nickname in channel")
-		apiUri  = flag.String("api", "http://localhost:8080", "Define service that responds with frame data")
-		title   = flag.String("title", "usf4", "Define title to scope frame data")
+		channel  = flag.String("channel", "#fgframebot", "Channel bot will join")
+		nick     = flag.String("nick", "fgframebot", "Nickname in channel")
+		apiUri   = flag.String("api", "http://localhost:8080", "Define service that responds with frame data")
+		title    = flag.String("title", "usf4", "Define title to scope frame data")
+		passPath = flag.String("botpass", "bot_pass.txt", "Path to Twitch OAuth password file")
 	)
+	flag.Parse()
 
-	filePass, err := ioutil.ReadFile("bot_pass.txt")
+	filePass, err := ioutil.ReadFile(*passPath)
 	if err != nil {
 		fmt.Println("Unable to read bot_pass.txt file")
 		os.Exit(1)
 	}
 	pass := strings.Replace(string(filePass), "\n", "", 0)
-	flag.Parse()
-
 	bot := NewBot(channel, nick, &pass, apiUri, title)
 	bot.Log("Initialized fgframebot.go")
 	bot.Log("Using API endpoint: " + *bot.service.host + "/" + *bot.service.title)
