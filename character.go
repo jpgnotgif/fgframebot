@@ -10,12 +10,22 @@ import (
 	"strings"
 )
 
+type CharacterError struct {
+	errMsg string
+	line   string
+}
+
+func (characterError *CharacterError) Error() string {
+	return characterError.errMsg + "\n" + characterError.line
+}
+
 type Character struct {
 	name        string
 	endpoint    string
 	frames      map[string]FrameDatum
 	movelistUrl string
 	logger      *log.Logger
+	err         *CharacterError
 }
 
 type FrameDatum struct {
@@ -45,11 +55,14 @@ func SetData(character *Character, bot *Bot) {
 	uri := *bot.service.host + "/" + *bot.service.title + "/" + character.name
 
 	character.Log("Fetching data for " + character.name)
+	frameDatums := make(map[string]FrameDatum)
+
 	resp, err := http.Get(uri)
 
 	if err != nil {
-		// handle error here
-		character.Log("Failed to get data for " + character.name)
+		character.Log("Failed to fetch data for " + character.name)
+		character.err = &CharacterError{err.Error(), fileLine()}
+		return
 	}
 
 	defer resp.Body.Close()
@@ -57,6 +70,8 @@ func SetData(character *Character, bot *Bot) {
 
 	if httpReadErr != nil {
 		character.Log("Failed to read response body")
+		character.err = &CharacterError{err.Error(), fileLine()}
+		return
 	}
 
 	strValue := string(body[:])
@@ -66,10 +81,11 @@ func SetData(character *Character, bot *Bot) {
 
 	if jsonErr != nil {
 		character.Log("Failed to decode json " + strValue)
+		character.err = &CharacterError{jsonErr.Error(), fileLine()}
+		return
 	}
 
 	mapInterface := rawJsonInterface.(map[string]interface{})
-	frameDatums := make(map[string]FrameDatum)
 
 	// TODO: is there a better way to do this?
 	for k, v := range mapInterface {

@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/textproto"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -40,7 +41,7 @@ func NewBot(channel *string, nick *string, pass *string, host *string, title *st
 		channel: *channel,
 		nick:    *nick,
 		pass:    *pass,
-		logger:  log.New(os.Stdout, "log: ", log.Lshortfile),
+		logger:  log.New(os.Stdout, "bot: ", log.Ltime),
 		timeout: 60,
 		service: &FrameService{host: host, title: title},
 	}
@@ -59,6 +60,18 @@ func Now() string {
 func (bot *Bot) Log(msg string, vars ...string) {
 	timestamp := Now()
 	bot.logger.Println(timestamp + " - " + bot.nick + " - " + msg + " " + strings.Join(vars, " "))
+}
+
+// http://stackoverflow.com/questions/17640360/file-or-line-similar-in-golang
+func fileLine() string {
+	_, fileName, fileLine, ok := runtime.Caller(1)
+	var s string
+	if ok {
+		s = fmt.Sprintf("%s:%d", fileName, fileLine)
+	} else {
+		s = ""
+	}
+	return s
 }
 
 func (bot *Bot) Connect() {
@@ -103,7 +116,7 @@ func main() {
 
 	filePass, err := ioutil.ReadFile(*passPath)
 	if err != nil {
-		fmt.Println("Unable to read bot_pass.txt file")
+		log.New(os.Stdout, "error: ", log.Lshortfile).Println("Unable to read bot_pass.txt file")
 		os.Exit(1)
 	}
 	pass := strings.Replace(string(filePass), "\n", "", 0)

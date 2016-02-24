@@ -48,9 +48,14 @@ func (bot *Bot) ReadCmd(userName string, userMessage string) {
 
 		characterName := strings.ToLower(strings.TrimSpace(movesCmd[1]))
 		character := newCharacter(characterName, apiConfig.endpoint, bot)
-		message := character.PrintFormattedMoveList()
 
-		bot.Message(message)
+		if character.err == nil {
+			message := character.PrintFormattedMoveList()
+			bot.Message(message)
+		} else {
+			bot.Log(character.err.Error())
+			bot.Message("[Error] Failed to get move list for " + characterName)
+		}
 
 	} else {
 		bot.Message("Command not supported BibleThump")
